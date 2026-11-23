@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>koko. — 皇居ゆるラン・コミュニティ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFBF7;
+      --surface: #FFFFFF;
+      --ink: #2D2622;
+      --muted: #8C7E75;
+      --peach: #FF9EB5;
+      --peach-soft: #FFF0F4;
+      --matcha: #95B88A;
+      --matcha-soft: #F0F6EE;
+      --butter: #F6D879;
+      --butter-soft: #FFF9E5;
+      --border: #F1E6DC;
+      --shadow: 0 10px 28px rgba(74, 52, 42, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: 'Zen Maru Gothic', 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(135deg, #FCEEF2 0%, #F7F2E8 55%, #EEF5EB 100%);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      max-height: 880px;
+      background: var(--bg);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(45, 38, 34, 0.16);
+    }
+    @media (min-width: 480px) {
+      .app-shell {
+        height: 92dvh;
+        border-radius: 36px;
+        border: 6px solid #FFFFFF;
+      }
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 251, 247, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .logo {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .logo-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--peach);
+      display: inline-block;
+    }
+    .run-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--border);
+      background: #FFF;
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .run-toggle.active {
+      background: var(--matcha-soft);
+      border-color: var(--matcha);
+      color: #3D5F33;
+      box-shadow: 0 4px 12px rgba(149, 184, 138, 0.28);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #CFC5BC;
+    }
+    .run-toggle.active .pulse-dot {
+      background: #5EA64A;
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(94, 166, 74, 0.6); }
+      70% { box-shadow: 0 0 0 8px rgba(94, 166, 74, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(94, 166, 74, 0); }
+    }
+
+    /* Main Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px 96px;
+      scrollbar-width: none;
+    }
+    .content::-webkit-scrollbar { display: none; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.22s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Filter Chips */
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      white-space: nowrap;
+      border: 1.5px solid var(--border);
+      background: #FFF;
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #FFF;
+    }
+
+    /* Ticket Card */
+    .ticket-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    .ticket-top {
+      padding: 16px 16px 14px;
+      border-bottom: 1.5px dashed var(--border);
+      position: relative;
+    }
+    .ticket-top::before, .ticket-top::after {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+    }
+    .ticket-top::before { left: -9px; }
+    .ticket-top::after { right: -9px; }
+
+    .badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .pill-peach { background: var(--peach-soft); color: #C24B6B; }
+    .pill-matcha { background: var(--matcha-soft); color: #3D5F33; }
+    .pill-butter { background: var(--butter-soft); color: #8A6B13; }
+
+    .event-time {
+      font-size: 17px;
+      font-weight: 900;
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+    .event-meta {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .tags-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .mini-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      background: #F7F1EB;
+      padding: 4px 9px;
+      border-radius: 8px;
+    }
+
+    .ticket-bottom {
+      padding: 12px 16px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .host-info {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+    }
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      background: var(--peach-soft);
+      border: 2px solid #FFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .host-name { font-size: 13px; font-weight: 700; }
+    .host-link { font-size: 11px; color: #C24B6B; font-weight: 700; text-decoration: underline; }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary {
+      background: var(--ink);
+      color: #FFF;
+      padding: 9px 16px;
+      font-size: 12px;
+    }
+    .btn-peach {
+      background: var(--peach);
+      color: #FFF;
+      padding: 10px 18px;
+      font-size: 13px;
+    }
+    .btn-soft {
+      background: #F4ECE4;
+      color: var(--ink);
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+
+    /* FAB */
+    .fab {
+      position: absolute;
+      right: 18px;
+      bottom: 84px;
+      background: linear-gradient(135deg, #FF9EB5, #FFB48F);
+      color: #FFF;
+      border: 3px solid #FFF;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(255, 146, 172, 0.45);
+      cursor: pointer;
+      z-index: 15;
+    }
+
+    /* Map Tab */
+    .map-card {
+      background: #F4F8F1;
+      border: 1.5px solid #DCE8D5;
+      border-radius: 28px;
+      padding: 14px;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .map-caption {
+      font-size: 12px;
+      color: #4D6B44;
+      background: #FFFFFFCC;
+      padding: 8px 12px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+    }
+    .map-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1.08;
+      border-radius: 22px;
+      background: radial-gradient(circle at 50% 50%, #D9EED3 0%, #EAF5E4 62%, #F6FBF2 100%);
+      overflow: hidden;
+    }
+    .zone-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: #FFF;
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 6px 14px rgba(45,38,34,0.12);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.15s;
+    }
+    .zone-pin:hover { transform: translate(-50%, -50%) scale(1.06); }
+    .zone-pin.me {
+      border-color: var(--peach);
+      background: var(--peach-soft);
+      color: #B53B5E;
+    }
+    .zone-count {
+      background: var(--ink);
+      color: #FFF;
+      border-radius: 999px;
+      padding: 1px 6px;
+      font-size: 10px;
+    }
+    .zone-pin.me .zone-count { background: var(--peach); }
+
+    /* Otsurun Tab */
+    .crew-banner {
+      background: linear-gradient(135deg, #FFE4EC 0%, #FFF3CC 100%);
+      border: 1.5px solid #F6D8D8;
+      border-radius: 22px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .person-card {
+      background: #FFF;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 16px rgba(74,52,42,0.05);
+    }
+    .person-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .stamp-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+    }
+    .stamp-btn {
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 7px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .stamp-btn.sent {
+      background: var(--peach-soft);
+      border-color: var(--peach);
+      color: #B53B5E;
+    }
+    .ig-unlocked {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #FFF0F4, #FFF9E5);
+      border: 1px solid #F7CED9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #B53B5E;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 6px 12px 10px;
+      z-index: 20;
+    }
+    .nav-item {
+      border: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .nav-item .icon { font-size: 20px; line-height: 1; }
+    .nav-item.active { color: var(--ink); }
+    .nav-item.active .nav-pill {
+      background: var(--peach-soft);
+      padding: 3px 16px;
+      border-radius: 999px;
+    }
+
+    /* Modals & Sheets */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(45, 38, 34, 0.45);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 40;
+    }
+    .overlay.open { display: flex; animation: fadeIn 0.18s ease; }
+    .sheet {
+      width: 100%;
+      max-height: 88%;
+      background: var(--bg);
+      border-radius: 28px 28px 0 0;
+      padding: 18px 20px 26px;
+      overflow-y: auto;
+    }
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: #DFD3C8;
+      border-radius: 999px;
+      margin: 0 auto 14px;
+    }
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 900;
+      margin: 0 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .option-group { margin-bottom: 14px; }
+    .option-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 7px; display: block; }
+    .option-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+    .opt-pill {
+      border: 1.5px solid var(--border);
+      background: #FFF;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .opt-pill.selected {
+      background: var(--peach-soft);
+      border-color: var(--peach);
+      color: #B53B5E;
+    }
+
+    /* Card Preview Modal */
+    .canvas-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0 14px;
+    }
+    #storyCanvas {
+      width: 225px;
+      height: 400px;
+      border-radius: 22px;
+      box-shadow: 0 16px 36px rgba(45, 38, 34, 0.18);
+      background: #FFF;
+    }
+    .theme-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .theme-btn {
+      border: 2px solid transparent;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+    }
+    .theme-btn.active { border-color: var(--ink); }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: var(--ink);
+      color: #FFF;
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s;
+      z-index: 60;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="toast" class="toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">koko<span class="logo-dot"></span></div>
+      <button id="runToggle" class="run-toggle" onclick="toggleRunning()">
+        <span class="pulse-dot"></span>
+        <span id="runToggleLabel">いま走ってる OFF</span>
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Tab 1: Discover -->
+      <section id="tab-discover" class="tab-panel active">
+        <div class="chips" id="filterChips">
+          <button class="chip active" onclick="setFilter('all', this)">すべて</button>
+          <button class="chip" onclick="setFilter('women', this)">女性限定</button>
+          <button class="chip" onclick="setFilter('cafe', this)">カフェ目的</button>
+          <button class="chip" onclick="setFilter('beginner', this)">初心者歓迎</button>
+        </div>
+        <div id="eventList"></div>
+      </section>
+
+      <!-- Tab 2: Map -->
+      <section id="tab-map" class="tab-panel">
+        <div class="map-card">
+          <div class="map-caption">
+            <span>皇居8区画ライブ（自宅特定ゼロ設計）</span>
+            <span id="totalRunnersBadge">いま 19人</span>
+          </div>
+          <div class="map-stage" id="mapStage">
+            <svg viewBox="0 0 360 390" style="width:100%;height:100%;position:absolute;inset:0;">
+              <path d="M180 55 C255 55, 305 112, 298 195 C292 275, 250 332, 178 335 C106 338, 62 278, 62 195 C62 112, 112 55, 180 55 Z"
+                    fill="#CBE5C2" stroke="#8FBC85" stroke-width="10" stroke-dasharray="1 0" />
+              <path d="M180 86 C234 86, 268 128, 264 195 C260 258, 228 298, 178 300 C128 302, 95 258, 95 195 C95 130, 130 86, 180 86 Z"
+                    fill="#B3D8A8" />
+              <text x="180" y="192" text-anchor="middle" fill="#4B6E43" font-size="14" font-weight="800" font-family="Zen Maru Gothic">皇居 1周 5km</text>
+              <text x="180" y="212" text-anchor="middle" fill="#63875B" font-size="11" font-weight="700" font-family="Plus Jakarta Sans">KŌKYO LOOP</text>
+            </svg>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;">
+          エリアをタップすると、いま走っている仲間へ「ファイト！✨」を送れます。
+        </p>
+      </section>
+
+      <!-- Tab 3: Otsurun -->
+      <section id="tab-otsurun" class="tab-panel">
+        <div class="crew-banner" onclick="openStoryModal('crew')">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:#B53B5E;">TODAY'S CREW CARD</div>
+            <div style="font-size:15px;font-weight:900;margin-top:2px;">今日いっしょに走った証明を見る</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">入力ゼロ・9:16でそのままストーリー保存</div>
+          </div>
+          <div style="font-size:26px;">📸</div>
+        </div>
+        <div id="otsurunList"></div>
+      </section>
+    </main>
+
+    <!-- FAB (Discover tab only) -->
+    <button id="createFab" class="fab" onclick="openCreateModal()">＋ たてる</button>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('discover', this)">
+        <span class="nav-pill"><span class="icon">🎟️</span></span>
+        <span>みつける</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('map', this)">
+        <span class="nav-pill"><span class="icon">🗺️</span></span>
+        <span>マップ</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('otsurun', this)">
+        <span class="nav-pill"><span class="icon">🫧</span></span>
+        <span>おつラン！</span>
+      </button>
+    </nav>
+
+    <!-- Create Event Modal (Zero text input) -->
+    <div id="createOverlay" class="overlay" onclick="closeIfBackdrop(event, 'createOverlay')">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
+          <span>10秒でゆるランをたてる</span>
+          <button class="btn btn-soft" onclick="closeModal('createOverlay')">閉じる</button>
+        </div>
+
+        <div class="option-group">
+          <span class="option-label">いつ走る？</span>
+          <div class="option-pills" id="optTime"></div>
+        </div>
+        <div class="option-group">
+          <span class="option-label">集合エリア（皇居8区画）</span>
+          <div class="option-pills" id="optZone"></div>
+        </div>
+        <div class="option-group">
+          <span class="option-label">アフターのご褒美カフェ</span>
+          <div class="option-pills" id="optCafe"></div>
+        </div>
+        <div class="option-group">
+          <span class="option-label">雰囲気タグ</span>
+          <div class="option-pills" id="optVibe"></div>
+        </div>
+        <div class="option-group">
+          <span class="option-label">安心設定</span>
+          <div class="option-pills" id="optWomen"></div>
+        </div>
+
+        <button class="btn btn-peach" style="width:100%;padding:14px;font-size:14px;margin-top:6px;" onclick="submitCreateEvent()">
+          募集をつくって招待チケットを出す ✨
+        </button>
+      </div>
+    </div>
+
+    <!-- Host IG Preview Modal -->
+    <div id="igOverlay" class="overlay" onclick="closeIfBackdrop(event, 'igOverlay')">
+      <div class="sheet" id="igSheetBody"></div>
+    </div>
+
+    <!-- Map Zone Sheet -->
+    <div id="zoneOverlay" class="overlay" onclick="closeIfBackdrop(event, 'zoneOverlay')">
+      <div class="sheet" id="zoneSheetBody"></div>
+    </div>
+
+    <!-- 9:16 Auto Story Card Modal -->
+    <div id="storyOverlay" class="overlay" onclick="closeIfBackdrop(event, 'storyOverlay')">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
+          <span id="storyModalTitle">参加チケットができたよ</span>
+          <button class="btn btn-soft" onclick="closeModal('storyOverlay')">閉じる</button>
+        </div>
+        <div class="theme-row">
+          <button class="theme-btn active" style="background:#FFE4EC;color:#B53B5E;" onclick="setCardTheme('peach', this)">Peach</button>
+          <button class="theme-btn" style="background:#E6F2E2;color:#3D5F33;" onclick="setCardTheme('matcha', this)">Matcha</button>
+          <button class="theme-btn" style="background:#FFF3CC;color:#8A6B13;" onclick="setCardTheme('butter', this)">Butter</button>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="storyCanvas" width="1080" height="1920"></canvas>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:14px;font-size:14px;" onclick="downloadStoryPng()">
+          1080×1920 PNGを保存してストーリーへ 📲
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isRunning = false;
+    let currentFilter = 'all';
+    let cardTheme = 'peach';
+    let cardMode = 'ticket';
+    let activeCardEvent = null;
+
+    const draft = {
+      time: '日曜 9:00',
+      zone: '竹橋',
+      cafe: '丸の内ベーカリー',
+      vibe: 'おしゃべりペース',
+      womenOnly: true
+    };
+
+    const events = [
+      {
+        id: 'ev1',
+        time: '日曜 9:00',
+        zone: '竹橋',
+        cafe: '丸の内ベーカリー',
+        vibe: 'おしゃべりペース',
+        womenOnly: true,
+        category: ['women', 'cafe', 'beginner'],
+        spotsLeft: 2,
+        maxMembers: 4,
+        joined: false,
+        host: { name: 'みゆ', emoji: '🥐', ig: '@miyu_morning', bio: '朝ランとパン屋めぐり / 初心者歓迎です🫧', tags: ['淡色ウェア', '抹茶ラテ派', 'ゆっくり1周'] }
+      },
+      {
+        id: 'ev2',
+        time: '水曜 19:30',
+        zone: '桜田門',
+        cafe: '日比谷スタンドコーヒー',
+        vibe: '写真メイン',
+        womenOnly: false,
+        category: ['cafe'],
+        spotsLeft: 3,
+        maxMembers: 5,
+        joined: false,
+        host: { name: 'れん', emoji: '☕', ig: '@ren_tokyo_run', bio: '仕事終わりの夜ランゆる部。タイム見ません！', tags: ['夜景ラン', 'デジカメ好き', '20代中心'] }
+      },
+      {
+        id: 'ev3',
+        time: '土曜 8:30',
+        zone: '半蔵門',
+        cafe: '麹町ドーナツカフェ',
+        vibe: '初心者だけ',
+        womenOnly: true,
+        category: ['women', 'beginner', 'cafe'],
+        spotsLeft: 1,
+        maxMembers: 3,
+        joined: false,
+        host: { name: 'あおい', emoji: '🎀', ig: '@aoi_pilates_run', bio: '普段はピラティス派。歩き混じりでもOK！', tags: ['女性限定', 'ご褒美ドーナツ', '1周ゆるジョグ'] }
+      }
+    ];
+
+    const zones = [
+      { id: 'takebashi', name: '竹橋', x: 54, y: 15, count: 4, runners: ['みゆ 🥐', 'かな 🌷', 'さら 🎧', 'ゆい ☕'] },
+      { id: 'hirakawamon', name: '平川門', x: 76, y: 27, count: 2, runners: ['りこ 🍓', 'はる 🧃'] },
+      { id: 'otemachi', name: '大手町', x: 83, y: 50, count: 3, runners: ['れん ☕', 'もも 🍑', 'たく 👟'] },
+      { id: 'nijubashi', name: '二重橋前', x: 76, y: 74, count: 2, runners: ['えま 🧸', 'のあ 🌼'] },
+      { id: 'sakuradamon', name: '桜田門', x: 53, y: 86, count: 3, runners: ['あおい 🎀', 'ひな 🍋', 'すず 🫧'] },
+      { id: 'iwatabashi', name: '祝田橋', x: 26, y: 74, count: 1, runners: ['れい 🌿'] },
+      { id: 'hanzomon', name: '半蔵門', x: 18, y: 49, count: 2, runners: ['なな 🍩', 'みさ 🍒'] },
+      { id: 'chidorigafuchi', name: '千鳥ヶ淵', x: 27, y: 26, count: 2, runners: ['こころ 🌸', 'ゆめ ☁️'] }
+    ];
+
+    const otsurunPeople = [
+      { id: 'p1', name: 'みゆ', emoji: '🥐', context: '日曜 9:00 竹橋ゆるランで一緒', ig: '@miyu_morning', theySent: true, sentStamps: [] },
+      { id: 'p2', name: 'あおい', emoji: '🎀', context: '桜田門エリアですれ違い', ig: '@aoi_pilates_run', theySent: true, sentStamps: [] },
+      { id: 'p3', name: 'かな', emoji: '🌷', context: '同じ時間帯に皇居をラン', ig: '@kana_asakatsu', theySent: false, sentStamps: [] }
+    ];
+
+    const stampTypes = [
+      { id: 'otsurun', label: 'おつラン！✨' },
+      { id: 'asakatsu', label: '朝活えらい☀️' },
+      { id: 'wear', label: 'ウェア可愛い🎀' },
+      { id: 'again', label: 'また走ろ☕' }
+    ];
+
+    let toastTimer;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('createFab').style.display = tab === 'discover' ? 'block' : 'none';
+    }
+
+    function toggleRunning() {
+      isRunning = !isRunning;
+      const btn = document.getElementById('runToggle');
+      const label = document.getElementById('runToggleLabel');
+      btn.classList.toggle('active', isRunning);
+      label.textContent = isRunning ? '竹橋をラン中 ✨' : 'いま走ってる OFF';
+      renderMap();
+      showToast(isRunning ? '竹橋エリアに表示されたよ（位置はざっくり保護）' : 'ラン中表示をOFFにしたよ');
+    }
+
+    function setFilter(f, btn) {
+      currentFilter = f;
+      document.querySelectorAll('#filterChips .chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderEvents();
+    }
+
+    function renderEvents() {
+      const list = document.getElementById('eventList');
+      const filtered = events.filter(e => currentFilter === 'all' || e.category.includes(currentFilter));
+      list.innerHTML = filtered.map(ev => `
+        <article class="ticket-card">
+          <div class="ticket-top">
+            <div class="badge-row">
+              <span class="pill ${ev.womenOnly ? 'pill-peach' : 'pill-matcha'}">
+                ${ev.womenOnly ? '🎀 女性限定' : '🫧 だれでもOK'}
+              </span>
+              <span class="pill pill-butter">あと ${ev.spotsLeft}枠</span>
+            </div>
+            <h3 class="event-time">${ev.time} ・ ${ev.zone}集合</h3>
+            <div class="event-meta">
+              <span>☕ ご褒美：${ev.cafe}</span>
+            </div>
+            <div class="tags-inline">
+              <span class="mini-tag">#${ev.vibe}</span>
+              <span class="mini-tag">#タイム非表示</span>
+            </div>
+          </div>
+          <div class="ticket-bottom">
+            <div class="host-info" onclick="openIgPreview('${ev.id}')">
+              <div class="avatar">${ev.host.emoji}</div>
+              <div>
+                <div class="host-name">${ev.host.name}</div>
+                <div class="host-link">雰囲気を見る</div>
+              </div>
+            </div>
+            <button class="btn ${ev.joined ? 'btn-soft' : 'btn-primary'}" onclick="requestJoin('${ev.id}')">
+              ${ev.joined ? 'チケットを見る 🎟️' : '参加リクエスト'}
+            </button>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function openIgPreview(evId) {
+      const ev = events.find(e => e.id === evId);
+      const body = document.getElementById('igSheetBody');
+      body.innerHTML = `
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
+          <span>主催者の雰囲気</span>
+          <button class="btn btn-soft" onclick="closeModal('igOverlay')">閉じる</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div class="avatar" style="width:52px;height:52px;font-size:26px;">${ev.host.emoji}</div>
+          <div>
+            <div style="font-size:16px;font-weight:900;">${ev.host.name}</div>
+            <div style="font-size:12px;color:#C24B6B;font-weight:700;">Instagram ${ev.host.ig}</div>
+          </div>
+        </div>
+        <p style="font-size:13px;line-height:1.6;margin:0 0 12px;">${ev.host.bio}</p>
+        <div class="tags-inline" style="margin-bottom:14px;">
+          ${ev.host.tags.map(t => `<span class="mini-tag">#${t}</span>`).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+          <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,#FFE4EC,#FFF3CC);display:flex;align-items:center;justify-content:center;font-size:28px;">🥐</div>
+          <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,#E6F2E2,#FFFBF7);display:flex;align-items:center;justify-content:center;font-size:28px;">🌳</div>
+          <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,#FBEAD8,#FFE4EC);display:flex;align-items:center;justify-content:center;font-size:28px;">☕</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:13px;" onclick="closeModal('igOverlay');requestJoin('${ev.id}')">
+          このゆるランに参加リクエストする ✨
+        </button>
+      `;
+      openModal('igOverlay');
+    }
+
+    function requestJoin(evId) {
+      const ev = events.find(e => e.id === evId);
+      if (!ev.joined) {
+        ev.joined = true;
+        ev.spotsLeft = Math.max(0, ev.spotsLeft - 1);
+        renderEvents();
+        showToast('参加リクエストを送ったよ！チケットを生成中…');
+      }
+      activeCardEvent = ev;
+      openStoryModal('ticket');
+    }
+
+    function initCreateOptions() {
+      const renderPills = (id, list, key) => {
+        const el = document.getElementById(id);
+        el.innerHTML = list.map(item => {
+          const val = typeof item === 'object' ? item.val : item;
+          const label = typeof item === 'object' ? item.label : item;
+          return `<button class="opt-pill ${draft[key] === val ? 'selected' : ''}" onclick="selectDraft('${key}', ${JSON.stringify(val).replace(/"/g, '&quot;')})">${label}</button>`;
+        }).join('');
+      };
+      renderPills('optTime', ['明日 7:30', '水曜 19:30', '土曜 8:30', '日曜 9:00'], 'time');
+      renderPills('optZone', ['竹橋', '桜田門', '半蔵門', '大手町'], 'zone');
+      renderPills('optCafe', ['丸の内ベーカリー', '日比谷スタンドコーヒー', '麹町ドーナツカフェ', '大手町抹茶スタンド'], 'cafe');
+      renderPills('optVibe', ['おしゃべりペース', '写真メイン', '初心者だけ', '歩き混じりOK'], 'vibe');
+      renderPills('optWomen', [{ val: true, label: '🎀 女性限定' }, { val: false, label: '🫧 だれでもOK' }], 'womenOnly');
+    }
+
+    function selectDraft(key, val) {
+      draft[key] = val;
+      initCreateOptions();
+    }
+
+    function openCreateModal() {
+      initCreateOptions();
+      openModal('createOverlay');
+    }
+
+    function submitCreateEvent() {
+      const newEv = {
+        id: 'ev_' + Date.now(),
+        time: draft.time,
+        zone: draft.zone,
+        cafe: draft.cafe,
+        vibe: draft.vibe,
+        womenOnly: draft.womenOnly,
+        category: [draft.womenOnly ? 'women' : 'all', 'cafe', 'beginner'],
+        spotsLeft: 3,
+        maxMembers: 4,
+        joined: true,
+        host: { name: 'わたし', emoji: '✨', ig: '@me_kokyorun', bio: 'ゆるく皇居ラン楽しみましょう！', tags: [draft.vibe, '朝活'] }
+      };
+      events.unshift(newEv);
+      renderEvents();
+      closeModal('createOverlay');
+      activeCardEvent = newEv;
+      openStoryModal('ticket');
+      showToast('募集をたてたよ！ストーリーで仲間を呼ぼう');
+    }
+
+    function renderMap() {
+      const stage = document.getElementById('mapStage');
+      stage.querySelectorAll('.zone-pin').forEach(p => p.remove());
+      let total = 0;
+
+      zones.forEach(z => {
+        const hasMe = isRunning && z.id === 'takebashi';
+        const cnt = z.count + (hasMe ? 1 : 0);
+        total += cnt;
+        const btn = document.createElement('button');
+        btn.className = 'zone-pin' + (hasMe ? ' me' : '');
+        btn.style.left = z.x + '%';
+        btn.style.top = z.y + '%';
+        btn.innerHTML = `${hasMe ? '✨' : ''}${z.name} <span class="zone-count">${cnt}</span>`;
+        btn.onclick = () => openZoneSheet(z, hasMe);
+        stage.appendChild(btn);
+      });
+
+      document.getElementById('totalRunnersBadge').textContent = `いま ${total}人`;
+    }
+
+    function openZoneSheet(z, hasMe) {
+      const list = hasMe ? ['わたし ✨（いまここ）', ...z.runners] : z.runners;
+      document.getElementById('zoneSheetBody').innerHTML = `
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
+          <span>${z.name}エリア（いま ${list.length}人）</span>
+          <button class="btn btn-soft" onclick="closeModal('zoneOverlay')">閉じる</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">正確な位置は非公開。エリア単位でゆるく応援できます。</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          ${list.map(r => `<span class="mini-tag" style="padding:7px 12px;font-size:12px;">${r}</span>`).join('')}
+        </div>
+        <button class="btn btn-peach" style="width:100%;padding:13px;" onclick="closeModal('zoneOverlay');showToast('${z.name}のみんなに「ファイト！✨」を送ったよ')">
+          ${z.name}の仲間へ「ファイト！✨」を送る
+        </button>
+      `;
+      openModal('zoneOverlay');
+    }
+
+    function renderOtsurun() {
+      const container = document.getElementById('otsurunList');
+      container.innerHTML = otsurunPeople.map(p => {
+        const unlocked = p.theySent && p.sentStamps.length > 0;
+        return `
+          <div class="person-card">
+            <div class="person-head">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="avatar">${p.emoji}</div>
+                <div>
+                  <div style="font-size:14px;font-weight:900;">${p.name}</div>
+                  <div style="font-size:11px;color:var(--muted);">${p.context}</div>
+                </div>
+              </div>
+              ${p.theySent ? '<span class="pill pill-peach">相手からも届いてる♡</span>' : '<span class="pill pill-matcha">すれ違い</span>'}
+            </div>
+            <div class="stamp-grid">
+              ${stampTypes.map(st => {
+                const isSent = p.sentStamps.includes(st.id);
+                return `<button class="stamp-btn ${isSent ? 'sent' : ''}" onclick="sendStamp('${p.id}', '${st.id}')">${st.label}</button>`;
+              }).join('')}
+            </div>
+            ${unlocked ? `
+              <div class="ig-unlocked">
+                <span>相互おつラン成立！IG解放 ✨</span>
+                <button class="btn btn-soft" style="padding:5px 10px;font-size:11px;" onclick="showToast('${p.ig} をコピーしたよ')">${p.ig}</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function sendStamp(personId, stampId) {
+      const p = otsurunPeople.find(x => x.id === personId);
+      if (!p.sentStamps.includes(stampId)) {
+        p.sentStamps.push(stampId);
+        renderOtsurun();
+        showToast(p.theySent ? `${p.name}さんと相互おつラン成立！IGが解放されたよ` : `${p.name}さんにスタンプを送ったよ`);
+      }
+    }
+
+    function openStoryModal(mode) {
+      cardMode = mode;
+      document.getElementById('storyModalTitle').textContent =
+        mode === 'ticket' ? '参加チケットができたよ 🎟️' : "Today's Crew カード 📸";
+      drawStoryCanvas();
+      openModal('storyOverlay');
+    }
+
+    function setCardTheme(theme, btn) {
+      cardTheme = theme;
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawStoryCanvas();
+    }
+
+    function drawStoryCanvas() {
+      const canvas = document.getElementById('storyCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = 1080, H = 1920;
+
+      const palettes = {
+        peach:  { bg1: '#FFE8F0', bg2: '#FFF6EE', accent: '#E86A8D', card: '#FFFFFF', text: '#2D2622', muted: '#8E787F', pill: '#FFE8F0' },
+        matcha: { bg1: '#E5F2E1', bg2: '#F7FAF4', accent: '#5D8A52', card: '#FFFFFF', text: '#253123', muted: '#6E7F6B', pill: '#EBF5E8' },
+        butter: { bg1: '#FFF2C6', bg2: '#FFFDF4', accent: '#C69214', card: '#FFFFFF', text: '#312A1E', muted: '#8C7E66', pill: '#FFF5D6' }
+      };
+      const p = palettes[cardTheme];
+
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, p.bg1);
+      grad.addColorStop(1, p.bg2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = p.accent + '22';
+      ctx.beginPath(); ctx.arc(170, 380, 220, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(920, 1520, 260, 0, Math.PI * 2); ctx.fill();
+
+      const cx = 110, cy = 320, cw = 860, ch = 1220, r = 64;
+      ctx.fillStyle = p.card;
+      ctx.shadowColor = 'rgba(45, 38, 34, 0.12)';
+      ctx.shadowBlur = 48;
+      ctx.shadowOffsetY = 20;
+      roundRect(ctx, cx, cy, cw, ch, r);
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+
+      ctx.fillStyle = p.accent;
+      ctx.font = '800 54px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('koko.', W / 2, cy + 115);
+
+      ctx.fillStyle = p.muted;
+      ctx.font = '700 30px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(cardMode === 'ticket' ? 'KŌKYO YURU-RUN TICKET' : "TODAY'S KŌKYO CREW", W / 2, cy + 168);
+
+      ctx.strokeStyle = p.accent;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.ellipse(W / 2, cy + 365, 130, 145, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = p.text;
+      ctx.font = '900 42px "Zen Maru Gothic", sans-serif';
+      ctx.fillText('皇居 1周', W / 2, cy + 378);
+
+      ctx.save();
+      ctx.setLineDash([16, 14]);
+      ctx.strokeStyle = p.accent + '55';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx + 50, cy + 580);
+      ctx.lineTo(cx + cw - 50, cy + 580);
+      ctx.stroke();
+      ctx.restore();
+
+      if (cardMode === 'ticket') {
+        const ev = activeCardEvent || events[0];
+        ctx.fillStyle = p.text;
+        ctx.font = '900 64px "Zen Maru Gothic", sans-serif';
+        ctx.fillText(`${ev.time}`, W / 2, cy + 700);
+
+        ctx.fillStyle = p.accent;
+        ctx.font = '800 44px "Zen Maru Gothic", sans-serif';
+        ctx.fillText(`📍 ${ev.zone}エリア集合`, W / 2, cy + 785);
+
+        ctx.fillStyle = p.pill;
+        roundRect(ctx, cx + 110, cy + 845, cw - 220, 96, 48);
+        ctx.fill();
+        ctx.fillStyle = p.text;
+        ctx.font = '700 36px "Zen Maru Gothic", sans-serif';
+        ctx.fillText(`☕ ${ev.cafe}`, W / 2, cy + 907);
+
+        ctx.fillStyle = p.muted;
+        ctx.font = '700 32px "Zen Maru Gothic", sans-serif';
+        ctx.fillText(`#${ev.vibe}   #タイムは測らない`, W / 2, cy + 1030);
+
+        ctx.fillStyle = p.accent;
+        ctx.font = '700 30px "Zen Maru Gothic", sans-serif';
+        ctx.fillText('いっしょに走るひと募集中 🫧', W / 2, cy + 1125);
+      } else {
+        ctx.fillStyle = p.text;
+        ctx.font = '900 54px "Zen Maru Gothic", sans-serif';
+        ctx.fillText('日曜 9:00 ゆるラン完走！', W / 2, cy + 695);
+
+        const crew = [
+          { e: '🥐', n: 'みゆ' }, { e: '🎀', n: 'あおい' },
+          { e: '🌷', n: 'かな' }, { e: '✨', n: 'わたし' }
+        ];
+        crew.forEach((m, i) => {
+          const mx = cx + 155 + i * 182;
+          const my = cy + 845;
+          ctx.fillStyle = p.pill;
+          ctx.beginPath(); ctx.arc(mx, my, 66, 0, Math.PI * 2); ctx.fill();
+          ctx.font = '60px sans-serif';
+          ctx.fillText(m.e, mx, my + 22);
+          ctx.fillStyle = p.text;
+          ctx.font = '700 28px "Zen Maru Gothic", sans-serif';
+          ctx.fillText(m.n, mx, my + 110);
+        });
+
+        ctx.fillStyle = p.muted;
+        ctx.font = '700 32px "Zen Maru Gothic", sans-serif';
+        ctx.fillText('☕ 丸の内ベーカリーで朝活', W / 2, cy + 1060);
+        ctx.fillStyle = p.accent;
+        ctx.font = '700 30px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('NO PACE • ONLY GOOD VIBES', W / 2, cy + 1135);
+      }
+
+      ctx.fillStyle = p.muted;
+      ctx.font = '700 28px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText('@koko_run_tokyo', W / 2, 1615);
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function downloadStoryPng() {
+      const canvas = document.getElementById('storyCanvas');
+      const link = document.createElement('a');
+      link.download = `koko-${cardMode}-${cardTheme}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('1080×1920 PNGを保存したよ！');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function closeIfBackdrop(e, id) { if (e.target.id === id) closeModal(id); }
+
+    renderEvents();
+    renderMap();
+    renderOtsurun();
+  </script>
+</body>
+</html>
