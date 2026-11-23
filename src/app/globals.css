@@ -22,6 +22,7 @@
 body {
   margin: 0;
   font-family: 'Zen Maru Gothic', 'Plus Jakarta Sans', sans-serif;
+  line-height: normal;
   background: linear-gradient(135deg, #FCEEF2 0%, #F7F2E8 55%, #EEF5EB 100%);
   color: var(--ink);
   min-height: 100dvh;
