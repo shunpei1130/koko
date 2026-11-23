@@ -1,0 +1,5 @@
+Local.xcconfig
+Koko.xcodeproj/
+DerivedData/
+*.xcuserstate
+xcuserdata/

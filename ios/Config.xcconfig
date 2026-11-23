@@ -1,0 +1,6 @@
+// Set the final Bundle ID and Team in Local.xcconfig before archiving.
+PRODUCT_BUNDLE_IDENTIFIER = app.koko.community
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+SUPABASE_PUBLISHABLE_KEY = sb_publishable_pChYSaeV9aE2gMS9wbrXow_zZmlibcq
+#include? "Local.xcconfig"
