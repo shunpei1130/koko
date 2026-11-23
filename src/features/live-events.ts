@@ -9,7 +9,10 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export const supabase = url && key ? createClient(url, key) : null;
 
 export type Participation = 'pending' | 'approved' | 'declined';
-export type KokoEvent = (typeof events)[number] & { isHost?: boolean; participation?: Participation };
+export type KokoEvent = (typeof events)[number] & {
+  isHost?: boolean; participation?: Participation; soloWelcome?: boolean; firstTimeWelcome?: boolean;
+  seriesId?: string; weeklyActive?: boolean; followed?: boolean; canCheckIn?: boolean; startsAt?: string;
+};
 export type Applicant = { user_id: string; display_name: string; avatar_emoji: string; status: Participation };
 export type Profile = {
   id: string; display_name: string; avatar_emoji: string;
@@ -19,6 +22,8 @@ type EventRow = {
   id: string; starts_at: string; meet_zone_id: string; cafe_name: string;
   vibe_tag: string; women_only: boolean; max_members: number; spots_left: number;
   host_name: string; host_emoji: string; is_host: boolean; participation: Participation | null;
+  solo_welcome: boolean; first_time_welcome: boolean; series_id: string | null;
+  weekly_active: boolean; followed: boolean; can_check_in: boolean;
 };
 
 export const avatars = ['🎀', '🌷', '🍑', '🥐', '☕', '✨', '🌿', '🫧'];
@@ -53,8 +58,12 @@ export function mapEvent(row: EventRow): KokoEvent {
     zone: zones.find(({ id }) => id === row.meet_zone_id)?.name ?? row.meet_zone_id,
     cafe: row.cafe_name, vibe: row.vibe_tag, womenOnly: row.women_only,
     maxMembers: row.max_members, spotsLeft: row.spots_left, isHost: row.is_host,
+    startsAt: row.starts_at, soloWelcome: row.solo_welcome, firstTimeWelcome: row.first_time_welcome,
+    seriesId: row.series_id ?? undefined, weeklyActive: row.weekly_active,
+    followed: row.followed, canCheckIn: row.can_check_in,
     joined: row.is_host || Boolean(row.participation), participation: row.participation ?? undefined,
     category: ['cafe', ...(row.women_only ? ['women'] : []),
+      ...(row.solo_welcome ? ['solo'] : []), ...(row.followed && row.weekly_active ? ['following'] : []),
       ...(['初心者だけ', '歩き混じりOK'].includes(row.vibe_tag) ? ['beginner'] : [])],
     host: { name: row.host_name, emoji: row.host_emoji, ig: '', bio: '', tags: [row.vibe_tag] },
   };
@@ -90,7 +99,7 @@ export function useKokoEvents(inviteId?: string) {
   const refresh = useCallback(async () => {
     if (!supabase) return;
     const { data, error } = await supabase
-      .rpc('list_koko_events', inviteId ? { target_event: inviteId } : {})
+      .rpc('koko_community_events', inviteId ? { target_event: inviteId } : {})
       .returns<EventRow[]>();
     if (!error && Array.isArray(data)) setEvents(data.map(mapEvent));
     setError(Boolean(error));
@@ -104,7 +113,7 @@ export function useKokoEvents(inviteId?: string) {
     const client = supabase;
     async function load() {
       const sequence = ++latest;
-      const { data, error } = await client.rpc('list_koko_events', inviteId ? { target_event: inviteId } : {}).returns<EventRow[]>();
+      const { data, error } = await client.rpc('koko_community_events', inviteId ? { target_event: inviteId } : {}).returns<EventRow[]>();
       if (!active || sequence !== latest) return;
       if (!error && Array.isArray(data)) setEvents(data.map(mapEvent));
       setError(Boolean(error));

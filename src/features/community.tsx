@@ -5,6 +5,7 @@ import { EmailSignIn, ProfileForm } from './account';
 import { formatTokyoStart, presets, supabase, toTokyoStart, useKokoEvents, writeError, type Applicant, type KokoEvent } from './live-events';
 import { useLiveMap } from './live-community';
 import { LiveOtsurun } from './otsurun';
+import { Arrival } from './community-extras';
 import { locateKokoZone } from '@/lib/geofence';
 import { events, otsurunPeople, stampTypes, zones } from './mock-data';
 import { drawStory, type Story, type Theme } from './story/draw';
@@ -12,8 +13,8 @@ import { drawStory, type Story, type Theme } from './story/draw';
 type Event = KokoEvent;
 type Tab = 'discover' | 'map' | 'otsurun';
 type Zone = (typeof zones)[number];
-type Panel = { kind: 'create' | 'account' } | { kind: 'host' | 'requests'; event: Event } | { kind: 'zone'; zone: Zone } | { kind: 'story'; story: Story };
-const filters = [['all', 'すべて'], ['women', '女性限定'], ['cafe', 'カフェ目的'], ['beginner', '初心者歓迎']];
+type Panel = { kind: 'create' | 'account' } | { kind: 'host' | 'requests' | 'arrival'; event: Event } | { kind: 'zone'; zone: Zone } | { kind: 'story'; story: Story };
+const filters = [['all', 'すべて'], ['solo', 'ひとり参加歓迎'], ['women', '女性限定'], ['cafe', 'カフェ目的'], ['beginner', '初心者歓迎']];
 const tabs = [
   { id: 'discover', emoji: '🎟️', label: 'みつける' },
   { id: 'map', emoji: '🗺️', label: 'マップ' },
@@ -22,6 +23,7 @@ const tabs = [
 const initialDraft = {
   time: '日曜 9:00', zone: '竹橋', cafe: '丸の内ベーカリー',
   vibe: 'おしゃべりペース', womenOnly: true, capacity: 4,
+  soloWelcome: false, firstTimeWelcome: false, weekly: false,
 };
 const debugLocation = process.env.NODE_ENV === 'development';
 const SheetFeedback = createContext('');
@@ -108,7 +110,9 @@ export function Community({ inviteId }: { inviteId?: string }) {
       id: crypto.randomUUID(), time: draft.time, zone: draft.zone, cafe: draft.cafe,
       vibe: draft.vibe, womenOnly: draft.womenOnly, maxMembers: draft.capacity,
       spotsLeft: draft.capacity - 1, joined: true, isHost: true,
+      soloWelcome: draft.soloWelcome, firstTimeWelcome: draft.firstTimeWelcome, weeklyActive: draft.weekly,
       category: ['cafe', ...(draft.womenOnly ? ['women'] : []),
+        ...(draft.soloWelcome ? ['solo'] : []),
         ...(['初心者だけ', '歩き混じりOK'].includes(draft.vibe) ? ['beginner'] : [])],
       host: { name: 'わたし', emoji: '✨', ig: '', bio: '', tags: [draft.vibe] },
     };
@@ -121,6 +125,8 @@ export function Community({ inviteId }: { inviteId?: string }) {
         const { error } = await supabase.from('run_events').insert({
           id: event.id, starts_at: startsAt, meet_zone_id: zoneId, cafe_name: draft.cafe,
           vibe_tag: draft.vibe, women_only: draft.womenOnly, max_members: draft.capacity,
+          solo_welcome: draft.soloWelcome, first_time_welcome: draft.firstTimeWelcome,
+          weekly_active: draft.weekly, series_id: draft.weekly ? event.id : null,
         });
         if (error) { notify(writeError(error)); return; }
         event.time = formatTokyoStart(startsAt);
@@ -132,6 +138,20 @@ export function Community({ inviteId }: { inviteId?: string }) {
     setFilter('all');
     setPanel({ kind: 'story', story: { kind: 'invite', event } });
     notify('募集をたてたよ！ストーリーで仲間を呼ぼう');
+  }
+
+  async function updateWeekly(event: Event, stop = false) {
+    if (!event.seriesId || !supabase || !requireProfile() || writing) return;
+    setWriting(true);
+    try {
+      const { error } = stop
+        ? await supabase.rpc('koko_stop_weekly', { series: event.seriesId })
+        : await supabase.rpc('koko_follow_weekly', { series: event.seriesId, enabled: !event.followed });
+      if (error) { notify(writeError(error)); return; }
+      await live.refresh();
+      if (stop) close();
+      notify(stop ? '次回以降の自動募集を止めたよ' : event.followed ? 'フォローを解除したよ' : '「フォロー中」から次回の募集を見られるよ');
+    } finally { setWriting(false); }
   }
 
   async function toggleRunning() {
@@ -216,6 +236,8 @@ export function Community({ inviteId }: { inviteId?: string }) {
           {!inviteId && <div className="chips" aria-label="募集フィルター">
             {filters.map(([id, label]) => <button key={id} className={`chip ${filter === id ? 'active' : ''}`}
               aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}
+            {live.session && <button className={`chip ${filter === 'following' ? 'active' : ''}`}
+              aria-pressed={filter === 'following'} onClick={() => setFilter('following')}>フォロー中</button>}
           </div>}
           {visibleEvents.map((event) => <article className="ticket-card" key={event.id}>
             <div className="ticket-top">
@@ -227,7 +249,12 @@ export function Community({ inviteId }: { inviteId?: string }) {
               </div>
               <h2 className="event-time">{event.time} ・ {event.zone}集合</h2>
               <div className="event-meta">☕ ご褒美：{event.cafe}</div>
-              <div className="tags-inline"><span className="mini-tag">#{event.vibe}</span><span className="mini-tag">#タイム非表示</span></div>
+              <div className="tags-inline">
+                <span className="mini-tag">#{event.vibe}</span><span className="mini-tag">#タイム非表示</span>
+                {event.soloWelcome && <span className="pill pill-peach">ひとり参加歓迎</span>}
+                {event.firstTimeWelcome && <span className="pill pill-matcha">初参加歓迎</span>}
+                {event.weeklyActive && <span className="pill pill-butter">毎週開催</span>}
+              </div>
             </div>
             <div className="ticket-bottom">
               <button className="host-info" onClick={() => setPanel({ kind: 'host', event })}>
@@ -242,6 +269,11 @@ export function Community({ inviteId }: { inviteId?: string }) {
                   {event.joined ? 'チケットを見る 🎟️' : event.spotsLeft === 0 ? '満席' : '参加リクエスト'}
                 </button>
                 {supabase && event.isHost && <button className="btn btn-primary" onClick={() => setPanel({ kind: 'requests', event })}>参加申請を確認</button>}
+                {event.seriesId && event.weeklyActive && !event.isHost && <button className="btn btn-soft" disabled={writing}
+                  aria-pressed={Boolean(event.followed)} onClick={() => void updateWeekly(event)}>
+                  {event.followed ? 'フォロー中' : '毎週の募集をフォロー'}
+                </button>}
+                {event.canCheckIn && <button className="btn btn-peach" onClick={() => setPanel({ kind: 'arrival', event })}>集合・着いたよ</button>}
               </div>
             </div>
           </article>)}
@@ -334,6 +366,17 @@ export function Community({ inviteId }: { inviteId?: string }) {
         <Options title="雰囲気タグ" values={['おしゃべりペース', '写真メイン', '初心者だけ', '歩き混じりOK']} value={draft.vibe} onChange={(vibe) => setDraft({ ...draft, vibe })} />
         <Options title="安心設定" values={[true, false]} value={draft.womenOnly} label={(value) => value ? '🎀 女性限定' : '🫧 だれでもOK'} onChange={(womenOnly) => setDraft({ ...draft, womenOnly })} />
         <Options title="定員（主催者を含む）" values={[2, 3, 4, 5, 6]} value={draft.capacity} label={(value) => `${value}名`} onChange={(capacity) => setDraft({ ...draft, capacity })} />
+        <fieldset className="option-group">
+          <legend className="option-label">歓迎チップ・開催頻度</legend>
+          <div className="option-pills">
+            {([
+              ['soloWelcome', 'ひとり参加歓迎'],
+              ['firstTimeWelcome', '初参加歓迎'],
+              ['weekly', '毎週この曜日・時間'],
+            ] as const).map(([key, label]) => <button key={key} className={`opt-pill ${draft[key] ? 'selected' : ''}`}
+              aria-pressed={draft[key]} onClick={() => setDraft({ ...draft, [key]: !draft[key] })}>{label}</button>)}
+          </div>
+        </fieldset>
         <button className="btn btn-peach sheet-action" disabled={writing} onClick={() => void createEvent()}>募集をつくって招待チケットを出す ✨</button>
       </Sheet>}
       {panel?.kind === 'host' && <Sheet title="主催者の雰囲気" onClose={close}>
@@ -366,6 +409,11 @@ export function Community({ inviteId }: { inviteId?: string }) {
       </Sheet>}
       {panel?.kind === 'requests' && <Sheet title="参加リクエスト" onClose={close}>
         <Requests eventId={panel.event.id} onDecision={() => void live.refresh()} />
+        {panel.event.weeklyActive && <button className="btn btn-soft mt-3" disabled={writing}
+          onClick={() => void updateWeekly(panel.event, true)}>次回以降の自動募集を止める</button>}
+      </Sheet>}
+      {panel?.kind === 'arrival' && <Sheet title="集合・着いたよ" onClose={close}>
+        <Arrival event={panel.event} onClose={close} />
       </Sheet>}
       {panel?.kind === 'zone' && <Sheet title={`${panel.zone.name}エリア（いま ${countInZone(mapZones.find(({ id }) => id === panel.zone.id) ?? panel.zone)}人）`} onClose={close}>
         <p className="crew-note mb-3">エリア単位でゆるく応援できます。</p>

@@ -5,6 +5,7 @@ import { formatTokyoStart, supabase, writeError } from './live-events';
 import type { Crew, Encounter } from './live-community';
 import { stampTypes } from './mock-data';
 import type { Story } from './story/draw';
+import { RunAgain } from './community-extras';
 
 export function LiveOtsurun({ userId, notify, onSignIn, onStory }: {
   userId?: string;
@@ -17,6 +18,7 @@ export function LiveOtsurun({ userId, notify, onSignIn, onStory }: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [againRevision, setAgainRevision] = useState(0);
 
   const load = useCallback(async (isActive: () => boolean) => {
     if (!supabase || !userId) return;
@@ -52,6 +54,7 @@ export function LiveOtsurun({ userId, notify, onSignIn, onStory }: {
       });
       if (error) { notify(writeError(error)); return; }
       await load(() => true);
+      if (stamp === 'again') setAgainRevision((revision) => revision + 1);
       notify(person.they_sent && person.sent_stamps.length === 0
         ? `${person.name}さんと相互おつラン成立！` : `${person.name}さんにスタンプを送ったよ`);
     } finally { setBusy(false); }
@@ -62,6 +65,7 @@ export function LiveOtsurun({ userId, notify, onSignIn, onStory }: {
       <p className="mb-2">ログインすると、一緒に走った仲間にスタンプを送れるよ。</p>
       <button className="btn btn-primary" onClick={onSignIn}>メールでログイン</button>
     </div> : <>
+      <RunAgain key={againRevision} notify={notify} />
       {crew && <button className="crew-banner w-full text-left" onClick={() => onStory({
         kind: 'crew', crew: { date: formatTokyoStart(crew.starts_at), cafe: crew.cafe, members: crew.members },
       })}>
